@@ -6,7 +6,7 @@
     <title>Gestión de Equipos Industriales</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500&display=swap');
-        
+
         body {
             font-family: 'Playfair Display', serif;
             font-size: 18px;
@@ -103,12 +103,12 @@
         }
     </style>
 </head>
-<body onload="cargarEquipos()">
+<body>
     <h1>Gestión de Equipos Industriales</h1>
     <div class="container">
         <div class="button-container">
-            <button class="add-btn" onclick="agregarEquipo()">Agregar Equipo</button>
-            <button class="delete-btn" onclick="eliminarSeleccionados()">Eliminar</button>
+            <button class="add-btn" id="btnAgregar">Agregar Equipo</button>
+            <button class="delete-btn" id="btnEliminar">Eliminar</button>
         </div>
         <table>
             <thead>
@@ -134,46 +134,74 @@
         </div>
     </div>
     <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            cargarEquipos();
+            document.getElementById("btnAgregar").addEventListener("click", agregarEquipo);
+            document.getElementById("btnEliminar").addEventListener("click", eliminarSeleccionados);
+        });
+
         function cargarEquipos() {
-            if (typeof(Storage) !== "undefined") {
-                const lista = document.getElementById("equipo-lista");
-                lista.innerHTML = localStorage.getItem("equipos") || '';
-            } else {
-                alert("Local Storage no es soportado en este navegador.");
-            }
+            const lista = document.getElementById("equipo-lista");
+            const equiposGuardados = JSON.parse(localStorage.getItem("equipos")) || [];
+            lista.innerHTML = "";
+            equiposGuardados.forEach(equipo => {
+                lista.appendChild(crearFilaEquipo(equipo));
+            });
         }
+
         function guardarEquipos() {
-            if (typeof(Storage) !== "undefined") {
-                localStorage.setItem("equipos", document.getElementById("equipo-lista").innerHTML);
-            }
+            const equipos = [];
+            document.querySelectorAll("#equipo-lista tr").forEach(fila => {
+                equipos.push({
+                    id: fila.cells[1].innerText,
+                    nombre: fila.cells[2].innerText,
+                    estado: fila.cells[4].querySelector("select").value,
+                    ultimaRevision: fila.cells[5].querySelector("input").value,
+                    proximaRevision: fila.cells[6].querySelector("input").value
+                });
+            });
+            localStorage.setItem("equipos", JSON.stringify(equipos));
         }
+
         function agregarEquipo() {
-            const tabla = document.getElementById("equipo-lista");
+            const equipo = {
+                id: "Nuevo ID",
+                nombre: "Nuevo Equipo",
+                estado: "Operativo",
+                ultimaRevision: "",
+                proximaRevision: ""
+            };
+            document.getElementById("equipo-lista").appendChild(crearFilaEquipo(equipo));
+            guardarEquipos();
+        }
+
+        function crearFilaEquipo(equipo) {
             const fila = document.createElement("tr");
             fila.innerHTML = `
                 <td><input type="checkbox"></td>
-                <td contenteditable="true">Nuevo ID</td>
-                <td contenteditable="true">Nuevo Equipo</td>
+                <td contenteditable="true">${equipo.id}</td>
+                <td contenteditable="true">${equipo.nombre}</td>
                 <td><a href="#" class="ver-manual">📄</a></td>
                 <td>
                     <select>
-                        <option>Operativo</option>
-                        <option>En Mantenimiento</option>
-                        <option>Fuera de Servicio</option>
+                        <option ${equipo.estado === "Operativo" ? "selected" : ""}>Operativo</option>
+                        <option ${equipo.estado === "En Mantenimiento" ? "selected" : ""}>En Mantenimiento</option>
+                        <option ${equipo.estado === "Fuera de Servicio" ? "selected" : ""}>Fuera de Servicio</option>
                     </select>
                 </td>
-                <td><input type="date"></td>
-                <td><input type="date"></td>
+                <td><input type="date" value="${equipo.ultimaRevision}"></td>
+                <td><input type="date" value="${equipo.proximaRevision}"></td>
             `;
-            tabla.appendChild(fila);
-            guardarEquipos();
+            fila.addEventListener("input", guardarEquipos);
+            return fila;
         }
+
         function eliminarSeleccionados() {
-            const checkboxes = document.querySelectorAll("#equipo-lista input[type='checkbox']:checked");
-            checkboxes.forEach(checkbox => checkbox.closest("tr").remove());
+            document.querySelectorAll("#equipo-lista input[type='checkbox']:checked").forEach(checkbox => {
+                checkbox.closest("tr").remove();
+            });
             guardarEquipos();
         }
-        document.addEventListener("input", guardarEquipos);
     </script>
 </body>
 </html>
