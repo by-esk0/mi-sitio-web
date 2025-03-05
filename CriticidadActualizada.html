@@ -135,11 +135,17 @@
     </div>
     <script>
         function cargarEquipos() {
-            const lista = document.getElementById("equipo-lista");
-            lista.innerHTML = localStorage.getItem("equipos") || '';
+            if (typeof(Storage) !== "undefined") {
+                const lista = document.getElementById("equipo-lista");
+                lista.innerHTML = localStorage.getItem("equipos") || '';
+            } else {
+                alert("Local Storage no es soportado en este navegador.");
+            }
         }
         function guardarEquipos() {
-            localStorage.setItem("equipos", document.getElementById("equipo-lista").innerHTML);
+            if (typeof(Storage) !== "undefined") {
+                localStorage.setItem("equipos", document.getElementById("equipo-lista").innerHTML);
+            }
         }
         function agregarEquipo() {
             const tabla = document.getElementById("equipo-lista");
